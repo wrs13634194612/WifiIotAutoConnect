@@ -19,7 +19,7 @@ package com.example.demoanalytic;
 public class WifiDelegateImpl implements WifiDelegate {
 
     private final int DELAYT_TIME = 2000; //每秒扫描一次
-    private final int TOTAL_TIMES = 10;//最多扫描20次
+    private final int TOTAL_TIMES = 20;//最多扫描20次
 
     private ScheduledExecutorService pool;
     private volatile int index; //当前扫描的次数

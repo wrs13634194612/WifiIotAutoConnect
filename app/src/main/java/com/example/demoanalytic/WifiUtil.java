@@ -305,13 +305,13 @@ public class WifiUtil {
 
     public static void showDialo(final AppCompatActivity context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(context.getString(R.string.app_name)).
-                setMessage(context.getString(R.string.app_name)).setPositiveButton(context.getString(R.string.app_name), new DialogInterface.OnClickListener() {
+        builder.setTitle("提示").
+                setMessage("请允许开启wifi权限和定位权限").setPositiveButton("去开启", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         gotoAuthorize(context);
                     }
-                }).setNegativeButton(context.getString(R.string.app_name), new DialogInterface.OnClickListener() {
+                }).setNegativeButton("暂不开启", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 

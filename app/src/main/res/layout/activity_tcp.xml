@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+
+    <Button
+        android:id="@+id/btn_start_connect_wifi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_blue_light"
+        android:text="开始连接WiFi"
+        android:layout_centerInParent="true"
+        />
+
+    <Button
+        android:id="@+id/btn_start_connect_tcp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_purple"
+        android:text="重连tcp"
+        android:layout_below="@+id/btn_start_connect_wifi"
+
+        android:layout_centerInParent="true"
+        />
+
+
+    <TextView
+        android:id="@+id/tv_ap_wifi_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_red_dark"
+        android:text="@string/app_name"
+        android:layout_below="@+id/btn_start_connect_tcp"
+
+        android:layout_centerInParent="true"
+        />
+
+    <TextView
+        android:id="@+id/tv_time_wifi_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_orange_dark"
+        android:text="@string/app_name"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/tv_ap_wifi_status"
+        />
+
+
+    <TextView
+        android:id="@+id/tv_time_wifi_product"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_green_light"
+        android:text="@string/app_name"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/tv_time_wifi_status"
+        />
+
+</RelativeLayout>

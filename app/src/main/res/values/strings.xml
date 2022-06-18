@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">DemoAnalytic</string>
+
+    <string name="zhang">张飞</string>
+    <string name="li">李逵</string>
+    <string name="huang">黄忠</string>
+    <string name="cao">曹操</string>
+
+
 </resources>

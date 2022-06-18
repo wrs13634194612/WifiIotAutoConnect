@@ -28,6 +28,7 @@ class IrBrandAdapterAp(private var devices: List<ScanResult>)
     }
 
 
+
     override fun getItemCount(): Int {
         return devices.size
     }

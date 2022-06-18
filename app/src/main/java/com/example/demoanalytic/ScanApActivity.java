@@ -27,14 +27,11 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class ScanActivity extends AppCompatActivity implements ScanResultListener {
+public class ScanApActivity extends AppCompatActivity implements ScanResultListener {
     private YueWifiHelper helper;
-
     public static final String HOTPOINT_NBO = "mindor-AP-2019-07-03";
     private TextView tvCurrentWifi;
     private ImageView ivScan;
-
-    //分割线
     private final static String TAG = "MyNet";
     private final int TYPE_QUERY = 0; //查询是否连接成功
     private final int TYPE_CONNECT = 1;   //连接指定WiFi
@@ -50,16 +47,13 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
     private final static int SEND_MSG_SUCCESS = 7;
     private final static int TIME_COUNT = 8;
     private final static int REC_WIFI_MSG = 9; //获取wifi名称
-
     private int timeCount = 0;
     private int retryCount = 0;
-
     private TextView tv_ap_wifi_status;
+    private TextView tv_time_wifi_status, tv_time_wifi_product;
+    private Button btn_start_connect_wifi, btn_start_connect_tcp;
+    private ScanResult person,wifi;
 
-    private TextView tv_time_wifi_status,tv_time_wifi_product;
-
-
-    private Button btn_start_connect_wifi,btn_start_connect_tcp;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -77,14 +71,20 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
         tv_time_wifi_product = findViewById(R.id.tv_time_wifi_product);
 
 
-        ScanResult person = (ScanResult) getIntent().getParcelableExtra("test");
+          person = (ScanResult) getIntent().getParcelableExtra("test");
+          wifi = (ScanResult) getIntent().getParcelableExtra("wifi");
+
+        Log.e(TAG, "resultSuc:" + person+ "\t" +wifi);
+
+
+
+
 
         btn_start_connect_wifi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //开始连接
                 helper.filterAndConnectTargetWifi2(person, WIFI_NAME, true);
-
             }
         });
 
@@ -94,6 +94,17 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
                 goToNext();  //自动配网
             }
         });
+
+        //开始连接
+        helper.filterAndConnectTargetWifi2(person, WIFI_NAME, true);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                goToNext();  //自动配网
+
+            }
+        },3000);
+
     }
 
     @Override
@@ -132,7 +143,7 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
                     timeCount = 95;
                     showErrorDialog();
                 }
-                tv_time_wifi_status.setText(String.valueOf(timeCount)+"%");
+                tv_time_wifi_status.setText(String.valueOf(timeCount) + "%");
                 handler.sendEmptyMessageDelayed(TIME_COUNT, 1000);
             } else if (message.what == NET_FAILED) {
             } else if (message.what == REC_MSG) {
@@ -146,6 +157,8 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
                         Log.e(TAG, "从tcp服务端返回的数据：" + productId + "==" + deviceId);
                         send2Device(TYPE_CLOSE_TCP);
                         startBeforeWifi();
+                        //开始连接 旧wifi 保证联网
+                        helper.filterAndConnectTargetWifi2(wifi, "wanye_2021", true);
                     } else if (netEntity.getStatus() == 2 || netEntity.getStatus() == 1) {
                         //返回连接中，继续查询状态
                         if (retryCount >= 10) {
@@ -197,10 +210,10 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
     private void goToNext() {
         // String ssid = "mindor-AP-GWD001-8c20";//  "mindor-AP-GWD001-8c20" //info.getSSID();
         //获取当前wifi名称
-        WifiInfo connectedWifiInfo = ((WifiManager)  getApplicationContext().getSystemService(Context.WIFI_SERVICE)).getConnectionInfo();
-        WifiManager wifiManager = (WifiManager)  getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo connectedWifiInfo = ((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE)).getConnectionInfo();
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         boolean isData = connectedWifiInfo.getSSID().contains(WIFI_NAME);
-        Log.e(TAG, "进添加设备 页面"  + "\t" + isData);
+        Log.e(TAG, "进添加设备 页面" + "\t" + isData);
         tv_ap_wifi_status.setText(connectedWifiInfo.getSSID());
         if (isData) {
             if (tcpClient != null) {
@@ -240,8 +253,6 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
         netEntity.setPassword("123456789");
         tcpClient.sendMsg(new Gson().toJson(netEntity));
     }
-
-
 
     private TcpSocketListener tcpSocketListener = new TcpSocketListener() {
         @Override
@@ -290,7 +301,4 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
             send2Device(TYPE_CONNECT);
         }
     };
-
-
-
 }

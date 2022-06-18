@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.HashMap;
 import java.util.List;
 
 //如何获取指定的WiFi并且自动连接: https://github.com/wrs13634194612/YueWifiConnect
@@ -26,6 +27,7 @@ public class ConnectActivity extends AppCompatActivity implements ScanResultList
     private TextView tvCurrentWifi;
     private ImageView ivScan;
 
+    private final String TAG="ConnectActivity";
 
     ConstraintLayout mConstraintLayout;
 
@@ -76,7 +78,7 @@ public class ConnectActivity extends AppCompatActivity implements ScanResultList
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.e("TAG", "" + list.size());
+                    Log.e(TAG, "" + list.size());
                     //  adapter.setItems(list);
                     /// adapter.notifyDataSetChanged();
                 }
@@ -84,6 +86,11 @@ public class ConnectActivity extends AppCompatActivity implements ScanResultList
             helper.filterAndConnectTargetWifi(list, HOTPOINT_NBO, isLastTime);
 
         }
+    }
+
+    @Override
+    public void resultMapSuc(HashMap<String, ScanResult> map, boolean isLastTime) {
+
     }
 
     @Override
@@ -97,7 +104,7 @@ public class ConnectActivity extends AppCompatActivity implements ScanResultList
     }
 
     @Override
-    public void connectedWifiCallback(final WifiInfo info) {
+    public void connectedWifiCallback(WifiInfo info, boolean isLastTime) {
         final boolean isConnect = helper.isConnected(info);
         runOnUiThread(new Runnable() {
             @Override
@@ -105,11 +112,16 @@ public class ConnectActivity extends AppCompatActivity implements ScanResultList
                 if (isConnect) {
                     tvCurrentWifi.setText(info.getSSID());
                     //跳转新页面
-                    Log.e("TAG", "连接成功，跳转新页面");
+                    Log.e(TAG, "连接成功，跳转新页面");
                 } else {
                     tvCurrentWifi.setText(info.getSSID() + "  >>> Connect Failure!");
                 }
             }
         });
     }
+
+ /*   @Override
+    public void connectedWifiCallback(final WifiInfo info) {
+
+    }*/
 }

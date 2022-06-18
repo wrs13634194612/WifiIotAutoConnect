@@ -1,34 +1,38 @@
 package com.example.demoanalytic;
 
 
-import android.content.Context;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
-import android.text.format.Formatter;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
+
+        import static android.net.wifi.SupplicantState.COMPLETED;
+
+        import android.content.Context;
+        import android.content.Intent;
+        import android.net.wifi.ScanResult;
+        import android.net.wifi.WifiInfo;
+        import android.net.wifi.WifiManager;
+        import android.os.Bundle;
+        import android.os.Handler;
+        import android.os.Message;
+        import android.support.annotation.NonNull;
+        import android.support.annotation.Nullable;
+        import android.support.v7.app.AppCompatActivity;
+        import android.text.TextUtils;
+        import android.text.format.Formatter;
+        import android.util.Log;
+        import android.view.View;
+        import android.widget.Button;
+        import android.widget.ImageView;
+        import android.widget.TextView;
 
 
-import com.google.gson.Gson;
+        import com.google.gson.Gson;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+        import java.util.List;
+        import java.util.Timer;
+        import java.util.TimerTask;
 
-public class ScanActivity extends AppCompatActivity implements ScanResultListener {
-    private YueWifiHelper helper;
+
+//如何获取指定的WiFi并且自动连接: https://github.com/wrs13634194612/YueWifiConnect
+public class TcpActivity extends AppCompatActivity {
 
     public static final String HOTPOINT_NBO = "mindor-AP-2019-07-03";
     private TextView tvCurrentWifi;
@@ -58,69 +62,76 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
 
     private TextView tv_time_wifi_status,tv_time_wifi_product;
 
-
-    private Button btn_start_connect_wifi,btn_start_connect_tcp;
-
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tcp);
-        helper = new YueWifiHelper(this, this);
-        btn_start_connect_wifi = findViewById(R.id.btn_start_connect_wifi);
-        btn_start_connect_tcp = findViewById(R.id.btn_start_connect_tcp);
-
 
         tv_ap_wifi_status = findViewById(R.id.tv_ap_wifi_status);
 
         tv_time_wifi_status = findViewById(R.id.tv_time_wifi_status);
 
         tv_time_wifi_product = findViewById(R.id.tv_time_wifi_product);
-
-
-        ScanResult person = (ScanResult) getIntent().getParcelableExtra("test");
-
-        btn_start_connect_wifi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //开始连接
-                helper.filterAndConnectTargetWifi2(person, WIFI_NAME, true);
-
-            }
-        });
-
-        btn_start_connect_tcp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                goToNext();  //自动配网
-            }
-        });
-    }
-
-    @Override
-    public void resultSuc(List<ScanResult> list, boolean isLastTime) {
-        Log.e(TAG, "resultSuc:" + list.size() + "\t" + isLastTime);
-
-    }
-
-    @Override
-    public void resultMapSuc(HashMap<String, ScanResult> map, boolean isLastTime) {
-
     }
 
 
     @Override
-    public void filterFailure() {
-        Log.e(TAG, "filterFailure error:");
+    protected void onStart() {
+        super.onStart();
+        tcpClient = new TcpClient(IP_ADDRESS_OLD, PORT);
+        tcpClient.setTcpSocketListener(tcpSocketListener);
+        // setListen(); 这里放置下一步 去点击连接wifi  但这一步  需要用代码实现 略过手动操作
+        goToNext();  //自动配网
     }
 
-    @Override
-    public void connectedWifiCallback(WifiInfo info, boolean isLastTime) {
-        Log.e(TAG, "connectedWifiCallback list:" + info.getSSID());
-        Message message = new Message();
-        message.what = 751;
-        message.obj = info;
-        handler.sendMessage(message);
-    }
+
+    private TcpSocketListener tcpSocketListener = new TcpSocketListener() {
+        @Override
+        public void onConnException(Exception e) {
+            Log.e(TAG, " TCP连接异常" + e);
+            handler.sendEmptyMessage(SEND_MSG_ERROR);
+        }
+
+        @Override
+        public void onMessage(String s) {
+            Log.d(TAG, "onMessage: " + s);
+            Message message = new Message();
+            message.what = REC_MSG;
+            message.obj = s;
+            handler.sendMessage(message);
+        }
+
+        @Override
+        public void onListenerException(Exception e) {
+            Log.d(TAG, "onListenerException: " + e);
+            handler.sendEmptyMessage(NET_FAILED);
+        }
+
+        @Override
+        public void onSendMsgSuccess(String s) {
+            Log.d(TAG, "onSendMsgSuccess: " + s);
+            handler.sendEmptyMessage(SEND_MSG_SUCCESS);
+        }
+
+        @Override
+        public void onSendMsgException(Exception e) {
+            Log.e(TAG, "发送消息时遇到异常， " + e);
+            handler.sendEmptyMessage(SEND_MSG_ERROR);
+        }
+
+        @Override
+        public void onCloseException(Exception e) {
+            Log.e(TAG, " 当TCP连接断开时遇到异常-onCloseException :" + e);
+
+        }
+
+        @Override
+        public void onConnected() {
+            Log.e(TAG, "onConnected:端口连接成功 ");
+            //连接成功就发送WiFi账号密码
+            send2Device(TYPE_CONNECT);
+        }
+    };
 
 
     private Handler handler = new Handler(new Handler.Callback() {
@@ -178,9 +189,6 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
             } else if (message.what == REC_WIFI_MSG) {
 
 
-            } else if (message.what == 751) {
-                WifiInfo dataString = (WifiInfo) message.obj;
-                tv_ap_wifi_status.setText(dataString.getSSID());
             }
             return false;
         }
@@ -201,7 +209,12 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
         WifiManager wifiManager = (WifiManager)  getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         boolean isData = connectedWifiInfo.getSSID().contains(WIFI_NAME);
         Log.e(TAG, "进添加设备 页面"  + "\t" + isData);
+
+
         tv_ap_wifi_status.setText(connectedWifiInfo.getSSID());
+
+
+
         if (isData) {
             if (tcpClient != null) {
                 tcpClient.closeTcpSocket();
@@ -240,57 +253,5 @@ public class ScanActivity extends AppCompatActivity implements ScanResultListene
         netEntity.setPassword("123456789");
         tcpClient.sendMsg(new Gson().toJson(netEntity));
     }
-
-
-
-    private TcpSocketListener tcpSocketListener = new TcpSocketListener() {
-        @Override
-        public void onConnException(Exception e) {
-            Log.e(TAG, " TCP连接异常" + e);
-            handler.sendEmptyMessage(SEND_MSG_ERROR);
-        }
-
-        @Override
-        public void onMessage(String s) {
-            Log.d(TAG, "onMessage: " + s);
-            Message message = new Message();
-            message.what = REC_MSG;
-            message.obj = s;
-            handler.sendMessage(message);
-        }
-
-        @Override
-        public void onListenerException(Exception e) {
-            Log.d(TAG, "onListenerException: " + e);
-            handler.sendEmptyMessage(NET_FAILED);
-        }
-
-        @Override
-        public void onSendMsgSuccess(String s) {
-            Log.d(TAG, "onSendMsgSuccess: " + s);
-            handler.sendEmptyMessage(SEND_MSG_SUCCESS);
-        }
-
-        @Override
-        public void onSendMsgException(Exception e) {
-            Log.e(TAG, "发送消息时遇到异常， " + e);
-            handler.sendEmptyMessage(SEND_MSG_ERROR);
-        }
-
-        @Override
-        public void onCloseException(Exception e) {
-            Log.e(TAG, " 当TCP连接断开时遇到异常-onCloseException :" + e);
-
-        }
-
-        @Override
-        public void onConnected() {
-            Log.e(TAG, "onConnected:端口连接成功 ");
-            //连接成功就发送WiFi账号密码
-            send2Device(TYPE_CONNECT);
-        }
-    };
-
-
 
 }
